@@ -29,7 +29,8 @@ n_frames=floor((length(y(1, :))-w_len)/R);
 spectrum=zeros(M, n_frames, nfft);
 theta=-90:1:90;
 a=zeros(M, length(theta));
-
+p=zeros(length(theta));
+covariance_R=zeros(M);
 
 figure(1)
 for i=1:M
@@ -40,9 +41,10 @@ for i=1:M
     for freq=1:length(f_spec_axis)
         a(i, :)=exp(-1i*2*pi*f_spec_axis(freq)*d*sin(theta*pi/180)*i/c);
         for frame=1:n_frames
-            covariance_R(:, :)=1/n_frames*spectrum(:, frame, freq)'*spectrum(:, frame, freq);
+             covariance_R=covariance_R+1/n_frames*spectrum(:, frame, freq)*spectrum(:, frame, freq)';
         end
+        p(theta)=(a(:,:)'*covariance_R*a(:,:))/(M^2);
     end
 end
-
-
+figure(2);
+plot(theta, p(1,:));
