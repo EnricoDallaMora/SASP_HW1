@@ -12,7 +12,7 @@ for i=1:n_frames
     y(i, :)=y(i, :)+Yi; 
 end
 
-time=s_len/fs;
-t=0:time/(n_frames-1):time;
-f=0:fs/(nfft-1):fs;
+
+t = 0:hop_size/fs:(n_frames-1)*hop_size/fs;
+f=0:fs/(nfft):fs-fs/nfft;
 spec=y;
