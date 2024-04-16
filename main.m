@@ -31,7 +31,7 @@ theta = -90:1:90;
 
 figure
 for i=1:M
-    y(i,:) = square(2*pi*f0*t+i*pi/M);
+    y(i,:) = square(2*pi*f0*t+i*pi/(M));
     subplot(4, 4, i);
     plot(t, y(i, :));
     title(['Mic ', num2str(i)])
@@ -74,7 +74,8 @@ for ii = 1:length(bands)
     end
 end
 
-p_avg = sum(p, 1)/length(bands);
+[~, indexes] = max(abs(p), [], 2);
 
-figure
-plot(theta, abs(p_avg))
+thetas = theta(indexes);
+
+avg_theta = sum(thetas)/length(thetas);
