@@ -5,8 +5,8 @@ clear;
 close all;
 
 
-%[y,Fs] = audioread(rec.wav);
-
+[y, fs] = audioread('array_recordings.wav');
+y = y.';
 M = 16; %number of sensors
 L = 0.45; %total length of array [m]
 c = 343; %measured speed of sound [m/s]
@@ -18,25 +18,28 @@ lambda_min = 2*d;
 f_max= c/lambda_min;  %anti-aliasing condition
 
 %% SIGNALS GENERATION
-fs = 8000;
-t_max = 0.3;
-t = 0:1/fs:t_max;
-y = zeros(M, length(t));
-f0 = 10;
-w_len = 33; %length of window
-w = hanning(w_len)'; %actual window
-R = (w_len-1)/2 + 1; %hop size in samples (50%)
+% 
+
+% w = hanning(w_len)'; %actual window
+% R = (w_len-1)/2 + 1; %hop size in samples (50%)
+w_len = 128; %length of window
+w = ones(1, w_len);
+R = 1;
 nfft = 512;
 theta = -90:1:90;
 
-figure
-for i=1:M
-    y(i,:) = square(2*pi*f0*t+i*pi/(M));
-    subplot(4, 4, i);
-    plot(t, y(i, :));
-    title(['Mic ', num2str(i)])
-    ylim([-1.2 1.2])
-end
+% t_max = 0.3;
+% t = 0:1/fs:t_max;
+% f0 = 500;
+% y = zeros(M, length(t));
+% figure
+% for i=1:M
+%     y(i,:) = square(2*pi*f0*t+i*pi/(M));
+%     subplot(4, 4, i);
+%     plot(t, y(i, :));
+%     title(['Mic ', num2str(i)])
+%     ylim([-1.2 1.2])
+% end
 
 %% PROCESSING
 [spectrum, t_spec_axis, f_spec_axis] = my_stft(y, fs, w, R, nfft, M);
@@ -70,12 +73,12 @@ p = zeros(length(bands), length(theta));
 
 for ii = 1:length(bands)
     for jj = 1:length(theta)
-        p(ii, jj) = squeeze(a(:, jj, ii))'*cov_est(:, :, ii)*a(:, jj, ii);
+        p(ii, jj) = squeeze(a(:, jj, ii))'*cov_est(:, :, ii)*a(:, jj, ii)/M^2;
     end
 end
 
-[~, indexes] = max(abs(p), [], 2);
+p_avg = sum(p, 1)/length(bands);
 
-thetas = theta(indexes);
+[~, indexes] = max(abs(p_avg));
 
-avg_theta = sum(thetas)/length(thetas);
+avg_theta = theta(indexes);
