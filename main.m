@@ -24,7 +24,7 @@ f_max= c/lambda_min;  %anti-aliasing condition
 % R = (w_len-1)/2 + 1; %hop size in samples (50%)
 w_len = 128; %length of window
 w = ones(1, w_len);
-R = 1;
+R = 1*w_len; %in samples, not in percentage
 nfft = 512;
 theta = -90:1:90;
 
