@@ -55,25 +55,31 @@ for ii=1:M
 end
 %% Propagation vectors and covariance matrix estimate
 bands = f_spec_axis(4:4:end);
-
+temp_res=50;
 a = zeros(M, length(theta), length(bands));
-cov_est = zeros(M, M, length(bands));
+cov_est = zeros(M, M, length(bands), temp_res);
+total_time_samples=length(t_spec_axis);
+time_step=floor(total_time_samples/temp_res);
 
 for f_c = bands
     a(:, :, bands==f_c) = exp(-1i*2*pi*f_c*d*sin(theta*pi/180).*(0:1:M-1).'/c);
-    for ii=1:length(size(t_spec_axis))
-        spec = squeeze(spectrum(f_spec_axis==f_c, ii, :));
-        cov_est(:, :, bands==f_c) = cov_est(:, :, bands==f_c) + spec*spec'/length(t_spec_axis);
+    for tt = 1:temp_res
+        for ii = 1+(tt-1)*time_step:tt*time_step
+            spec = squeeze(spectrum(f_spec_axis==f_c, ii, :));
+            cov_est(:, :, bands==f_c, tt) = cov_est(:, :, bands==f_c, tt) + spec*spec'/(total_time_samples/temp_res);
+        end
     end
 end
 
 %% Pseudo-spectrum
 
-p = zeros(length(bands), length(theta));
+p = zeros(length(bands), length(theta), temp_res);
 
-for ii = 1:length(bands)
-    for jj = 1:length(theta)
-        p(ii, jj) = squeeze(a(:, jj, ii))'*cov_est(:, :, ii)*a(:, jj, ii)/M^2;
+for tt = 1:temp_res
+    for ii = 1:length(bands)
+        for jj = 1:length(theta)
+            p(ii, jj, tt) = squeeze(a(:, jj, ii))'*cov_est(:, :, ii, tt)*a(:, jj, ii)/M^2;
+        end
     end
 end
 
@@ -83,16 +89,19 @@ p_avg = sum(p, 1)/length(bands);
 
 avg_theta = theta(indexes);
 
-P(:) = sum(p)/length(p(:,1));
 
 figure
-polarplot(theta*pi/180, abs(p_avg));
-title("Average DOA across all frequency bands");
-
-figure
-for i = 1:length(bands)
-    polarplot(theta*pi/180, abs(p(i, :)));
-    title("Estimated DOA at freqency: " + bands(i) + " Hz");
+for i = 1:temp_res
+    polarplot(theta*pi/180, abs(p_avg(1, :, i)));
+    title("Average DOA across all frequency bands, time: "+t_spec_axis(i*time_step)+" seconds");
     drawnow update;
     pause(0.1);
 end
+
+% figure
+% for i = 1:length(bands)
+%     polarplot(theta*pi/180, abs(p(i, :, 1)));
+%     title("Estimated DOA at freqency: " + bands(i) + " Hz");
+%     drawnow update;
+%     pause(0.1);
+% end
