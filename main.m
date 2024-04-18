@@ -82,3 +82,17 @@ p_avg = sum(p, 1)/length(bands);
 [~, indexes] = max(abs(p_avg));
 
 avg_theta = theta(indexes);
+
+P(:) = sum(p)/length(p(:,1));
+
+figure
+polarplot(theta*pi/180, abs(p_avg));
+title("Average DOA across all frequency bands");
+
+figure
+for i=1:length(bands)
+    polarplot(theta*pi/180, abs(p(i, :)));
+    title("Estimated DOA at freqency: "+bands(i)+" Hz");
+    drawnow update;
+    pause(0.1);
+end
