@@ -90,9 +90,9 @@ polarplot(theta*pi/180, abs(p_avg));
 title("Average DOA across all frequency bands");
 
 figure
-for i=1:length(bands)
+for i = 1:length(bands)
     polarplot(theta*pi/180, abs(p(i, :)));
-    title("Estimated DOA at freqency: "+bands(i)+" Hz");
+    title("Estimated DOA at freqency: " + bands(i) + " Hz");
     drawnow update;
     pause(0.1);
 end
