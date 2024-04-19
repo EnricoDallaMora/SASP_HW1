@@ -1,107 +1,119 @@
-%% DATA AND INITIALIZATION
-
 clc;
 clear;
 close all;
 
+%% DATA AND INITIALIZATION
+M = 16; % number of sensors
+L = 0.45; % total length of array [m]
+c = 343; % measured speed of sound [m/s]
+d = L/(M - 1); % distance between sensors [m]
+
+% d < lambda/2
+lambda_min = 2*d;
+f_max= c/lambda_min;  % anti-aliasing condition
+
 
 [y, fs] = audioread('array_recordings.wav');
-y = y.';
-M = 16; %number of sensors
-L = 0.45; %total length of array [m]
-c = 343; %measured speed of sound [m/s]
-d = L/(M - 1); %distance between sensors [m]
 
-%% ANTI-ALIASING CONDITION 
-%d<lambda/2
-lambda_min = 2*d;
-f_max= c/lambda_min;  %anti-aliasing condition
+K = 8192/4;
+big_win = hann(K).';
+big_hop = ceil(K*0.75);
 
-%% SIGNALS GENERATION
-% 
-
-% w = hanning(w_len)'; %actual window
-% R = (w_len-1)/2 + 1; %hop size in samples (50%)
-w_len = 128; %length of window
-w = ones(1, w_len);
-R = 1*w_len; %in samples, not in percentage
-nfft = 512;
+N_frames = floor((length(y)-K)/big_hop);
 theta = -90:1:90;
+p_avg = zeros(N_frames, length(theta));
 
-% t_max = 0.3;
-% t = 0:1/fs:t_max;
-% f0 = 500;
-% y = zeros(M, length(t));
-% figure
-% for i=1:M
-%     y(i,:) = square(2*pi*f0*t+i*pi/(M));
-%     subplot(4, 4, i);
-%     plot(t, y(i, :));
-%     title(['Mic ', num2str(i)])
-%     ylim([-1.2 1.2])
-% end
-
-%% PROCESSING
-[spectrum, t_spec_axis, f_spec_axis] = my_stft(y, fs, w, R, nfft, M);
-
-[ff, tt] = meshgrid(t_spec_axis, f_spec_axis);
-
-figure
-for ii=1:M
-    subplot(4, 4, ii)
-    surf(ff, tt, abs(spectrum(:, :, ii)), 'EdgeAlpha', 0)
-    view(2)
-    title(['Spectrogram ', num2str(ii)])
-end
-%% Propagation vectors and covariance matrix estimate
-bands = f_spec_axis(4:4:end);
-temp_res=50;
-a = zeros(M, length(theta), length(bands));
-cov_est = zeros(M, M, length(bands), temp_res);
-total_time_samples=length(t_spec_axis);
-time_step=floor(total_time_samples/temp_res);
-
-for f_c = bands
-    a(:, :, bands==f_c) = exp(-1i*2*pi*f_c*d*sin(theta*pi/180).*(0:1:M-1).'/c);
-    for tt = 1:temp_res
-        for ii = 1+(tt-1)*time_step:tt*time_step
+for kk = 1:N_frames
+    y_w = y((kk-1)*big_hop+1:(kk-1)*big_hop + K, :).'.*big_win;
+    
+    % SIGNALS GENERATION
+    
+    w_len = 128; % length of window
+    w = ones(1, w_len);
+    R = 1;
+    nfft = 512;
+    
+    
+    % t = 0:1/fs:(length(y_st)-1)/fs;
+    % limits = [0.9*min(mink(y_st, 1, 2)), 1.1*max(maxk(y_st, 1, 2))];
+    % parfor i=1:M
+    %     subplot(4, 4, i);
+    %     plot(t, y_st(i, :));
+    %     title(['Mic ', num2str(i)])
+    %     ylim(limits)
+    %     xlabel('time [s]')
+    %     ylabel(['y_{', num2str(i), '}(t)'])
+    %     grid on
+    % end
+    
+    % PROCESSING
+    [spectrum, t_spec_axis, f_spec_axis] = my_stft(y_w, fs, w, R, nfft, M);
+    
+    % [ff, tt] = meshgrid(t_spec_axis, f_spec_axis);
+    % 
+    % figure
+    % parfor ii=1:M
+    %     subplot(4, 4, ii)
+    %     surf(ff, tt, abs(spectrum(:, :, ii)), 'EdgeAlpha', 0)
+    %     view(2)
+    %     title(['Spectrogram ', num2str(ii)])
+    %     xlabel('time [s]')
+    %     ylabel('frequency [Hz]')
+    % end
+    
+    % Propagation vectors and covariance matrix estimate
+    bands = f_spec_axis(4:4:end);
+    a = zeros(M, length(theta), length(bands));
+    cov_est = zeros(M, M, length(bands));
+    
+    for f_c = bands
+        a(:, :, bands==f_c) = exp(-1i*2*pi*f_c*d*sin(theta*pi/180).*(0:1:M-1).'/c);
+        for ii = 1:length(t_spec_axis)
             spec = squeeze(spectrum(f_spec_axis==f_c, ii, :));
-            cov_est(:, :, bands==f_c, tt) = cov_est(:, :, bands==f_c, tt) + spec*spec'/(total_time_samples/temp_res);
+            cov_est(:, :, bands==f_c) = cov_est(:, :, bands==f_c) + spec*spec'/length(t_spec_axis);
         end
     end
-end
-
-%% Pseudo-spectrum
-
-p = zeros(length(bands), length(theta), temp_res);
-
-for tt = 1:temp_res
+    
+    % Pseudo-spectrum
+    p = zeros(length(bands), length(theta));
+        
     for ii = 1:length(bands)
         for jj = 1:length(theta)
-            p(ii, jj, tt) = squeeze(a(:, jj, ii))'*cov_est(:, :, ii, tt)*a(:, jj, ii)/M^2;
+            p(ii, jj) = squeeze(a(:, jj, ii))'*cov_est(:, :, ii)*a(:, jj, ii)/M^2;
         end
     end
+    
+    
+    p_avg(kk, :) = sum(p, 1)/length(bands);
+    
+    [~, indexes] = max(abs(p_avg));
+    
+    avg_theta = theta(indexes);
+    
+    % close all
+    % figure
+    % for i = 1:length(bands)
+    %     polarplot(theta*pi/180, abs(p(i, :)));
+    %     title("Estimated DOA at frequency: " + bands(i) + " Hz");
+    %     drawnow update;
+    %     pause(0.1);
+    % end
+    
+    % polarplot(theta*pi/180, abs(p_avg));
+    % title("Average DOA across all frequency bands");
+    % drawnow update;
+    % pause(0.1);
 end
-
-p_avg = sum(p, 1)/length(bands);
-
-[~, indexes] = max(abs(p_avg));
-
-avg_theta = theta(indexes);
-
-
+%%
+abs_p_avg = abs(p_avg);
+abs_p_avg = abs_p_avg ./ max(abs_p_avg, [], 2);
+[tax, theax] = meshgrid(theta, (0:1:N_frames-1)*big_hop/fs);
 figure
-for i = 1:temp_res
-    polarplot(theta*pi/180, abs(p_avg(1, :, i)));
-    title("Average DOA across all frequency bands, time: "+t_spec_axis(i*time_step)+" seconds");
-    drawnow update;
-    pause(0.1);
-end
-
-% figure
-% for i = 1:length(bands)
-%     polarplot(theta*pi/180, abs(p(i, :, 1)));
-%     title("Estimated DOA at freqency: " + bands(i) + " Hz");
-%     drawnow update;
-%     pause(0.1);
-% end
+surf(theax, tax, abs_p_avg, 'EdgeAlpha', 0)
+view(2)
+yticks([-90 -60 -30 0 30 60 90])
+xticks(0:2:14)
+xlabel('time [s]')
+ylabel('DOA [deg]')
+xlim([-0.5 15])
+title('Normalized pseudo-spectrum at each time frame')
