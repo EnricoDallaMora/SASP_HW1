@@ -15,20 +15,21 @@ f_max= c/lambda_min;  % anti-aliasing condition
 
 [y, fs] = audioread('array_recordings.wav');
 
-K = 8192/4;
+K = 512;
 big_win = hann(K).';
 big_hop = ceil(K*0.75);
 
 N_frames = floor((length(y)-K)/big_hop);
 theta = -90:1:90;
 p_avg = zeros(N_frames, length(theta));
+avg_theta = zeros(1, N_frames);
 
 for kk = 1:N_frames
     y_w = y((kk-1)*big_hop+1:(kk-1)*big_hop + K, :).'.*big_win;
     
     % SIGNALS GENERATION
     
-    w_len = 128; % length of window
+    w_len = 64; % length of window
     w = ones(1, w_len);
     R = 1;
     nfft = 512;
@@ -86,9 +87,9 @@ for kk = 1:N_frames
     
     p_avg(kk, :) = sum(p, 1)/length(bands);
     
-    [~, indexes] = max(abs(p_avg));
+    [~, indexes] = max(abs(p_avg(kk, :)));
     
-    avg_theta = theta(indexes);
+    avg_theta(kk) = theta(indexes);
     
     % close all
     % figure
@@ -116,4 +117,44 @@ xticks(0:2:14)
 xlabel('time [s]')
 ylabel('DOA [deg]')
 xlim([-0.5 15])
-title('Normalized pseudo-spectrum at each time frame')
+title('Normalized pseudo-spectrum in time')
+
+%%
+
+[u, v] = pol2cart(avg_theta*pi/180+pi/2, 0.25);
+figure
+polar(0, 0.25)
+hold on
+quiver(zeros(1, length(avg_theta)), zeros(1, length(avg_theta)), u, v, 'LineStyle','-', 'Color', 'green', 'LineWidth', 1.2)
+hold on
+stem(linspace(-0.45/2, 0.45/2, 16), zeros(1, 16),  'LineStyle', 'none', 'Marker','diamond', 'MarkerFaceColor','red', 'MarkerSize', 10, 'Color','black', 'LineWidth',2);
+xlim([-0.25 0.25])
+ylim([-0.1 0.4])
+axis equal
+grid on
+%%
+myVideo = VideoWriter('doas','MPEG-4');
+myVideo.FrameRate = 30;
+open(myVideo)
+figure(100)
+for i = 1:length(avg_theta)
+    polar(0, 0.3);
+    hold on
+    stem(linspace(-0.45/2, 0.45/2, 16), zeros(1, 16),  'LineStyle', 'none', ...
+        'Marker','diamond', 'MarkerFaceColor','red', 'MarkerSize', 10, ...
+        'Color','black', 'LineWidth',2);
+    hold on
+    quiver(0, 0, u(i), v(i), 'LineStyle','-', 'Color', 'green', 'LineWidth', 1.2)
+    hold off
+    xlim([-0.25 0.25])
+    ylim([-0.1 0.4])
+    axis equal
+    title(['Estimated DOA at time ', num2str(round(big_hop*i/fs, 2)), ' [s]'])
+    xlabel('array elements coordinates [m]')
+    xticks([-22.5e-2 -11.25e-2 0 11.25e-2 22.5e-2])
+    yticks([])
+    frame = getframe(100);
+    writeVideo(myVideo, frame)
+    drawnow limitrate
+end
+close(myVideo)
