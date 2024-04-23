@@ -14,6 +14,20 @@ f_max= c/lambda_min;  % anti-aliasing condition
 
 [y, fs] = audioread('array_recordings.wav');
 
+time = 0:1/fs:(length(y)-1)/fs;
+
+figure
+sgtitle('Array signals')
+for ii = 1:16
+    subplot(4, 4, ii)
+    plot(time, y(:, ii)./max(maxk(y, 1, 2)))
+    ylim([-1.1 1.1])
+    xlabel('time [s]')
+    xticks([2 6 10 14])
+    title(['Mic ' num2str(ii)])
+    grid on
+end
+
 %% PROCESSING
 K = 512;
 big_win = hann(K).';
