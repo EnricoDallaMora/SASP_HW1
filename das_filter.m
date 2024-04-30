@@ -22,3 +22,14 @@ function [avg_pseudo_spec] = das_filter(y, fs, nch, theta, c, d)
     end
 
     avg_pseudo_spec = sum(p, 1)/length(bands);
+    
+    % Geometric mean
+    % p = abs(p);
+    % avg_pseudo_spec = ones(1, length(theta));
+    % for ii = 1:length(bands)
+    %     avg_pseudo_spec = avg_pseudo_spec.*p(ii, :)./ max(maxk(p, 1, 2));
+    % end
+    % avg_pseudo_spec = (avg_pseudo_spec).^(1/length(bands));
+    
+    % Harmonic mean 
+    % avg_pseudo_spec = length(bands)./(sum(1./p, 1));
