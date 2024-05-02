@@ -31,7 +31,7 @@ end
 %% PROCESSING
 K = 1024;
 big_win = hann(K).';
-big_hop = ceil(K*0.75);
+big_hop = floor(K*0.75);
 N_frames = floor((length(y)-K)/big_hop);
 
 theta = -90:1:90;
