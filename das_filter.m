@@ -2,7 +2,7 @@ function [avg_pseudo_spec] = das_filter(y, fs, nch, theta, c, d)
 
     [spectrum, t_spec_axis, f_spec_axis] = my_stft(y, fs, nch);
     
-    bands = f_spec_axis(4:8:end);
+    bands = f_spec_axis(3:4:end);
     
     a = zeros(nch, length(theta), length(bands));
     cov_est = zeros(nch, nch, length(bands));
