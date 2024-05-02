@@ -1,6 +1,6 @@
 function [spec, t, f] = my_stft(signal, fs, nch)
 
-    w_len = 64;
+    w_len = 256;
     window = ones(1, w_len);
     hop_size = 1;
     nfft = 512;

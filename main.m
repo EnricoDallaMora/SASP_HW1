@@ -29,7 +29,7 @@ for ii = 1:16
 end
 
 %% PROCESSING
-K = 512;
+K = 1024;
 big_win = hann(K).';
 big_hop = ceil(K*0.75);
 N_frames = floor((length(y)-K)/big_hop);
@@ -108,7 +108,7 @@ grid minor
 
 %% DYNAMIC PLOT
 myVideo = VideoWriter('doas','MPEG-4');
-myVideo.FrameRate = 30;
+myVideo.FrameRate = 20;
 open(myVideo)
 figure(100)
 for i = 1:length(avg_theta)
