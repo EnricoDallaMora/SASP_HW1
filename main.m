@@ -111,9 +111,13 @@ for ll = 0:6
     text(0.29*cos(pi/6*ll), 0.29*sin(pi/6*ll), degrees(ll+1), 'HorizontalAlignment', 'center')
 end
 hold on
-plot(linspace(-0.45/2, 0.45/2, 16), zeros(1, 16),  'LineStyle', 'none', 'Marker', 'o', 'Color', 'b', 'MarkerFaceColor', 'b', ...
-    'MarkerSize', 8);
+plot(linspace(-0.45/2, 0.45/2, 16), zeros(1, 16),  'LineStyle', 'none', 'Marker', 'o', 'Color', 'b', ...
+    'MarkerFaceColor', 'w', 'MarkerSize', 12, 'LineWidth', 1.2);
 hold on
+for ii = 1:16
+    text((ii-1)/15*0.45-0.225, 0, num2str(ii), "HorizontalAlignment","center",...
+        'VerticalAlignment', 'middle', "FontSize", 8, 'Color', 'k')
+end
 quiver(zeros(1, length(avg_theta)), zeros(1, length(avg_theta)), u, v, 'LineStyle','-', ...
     'Color', 'r', 'LineWidth', 1.2)
 
@@ -130,7 +134,9 @@ grid minor
 myVideo = VideoWriter('doas','MPEG-4');
 myVideo.FrameRate = 20;
 open(myVideo)
-figure(100)
+
+f = figure(100);
+f.WindowState = 'maximized';
 for i = 1:length(avg_theta)
     plot(x_c, circle, 'Color', 'k', 'LineWidth', 1.2, 'LineStyle', '--')
     for ll = 0:6
@@ -139,8 +145,12 @@ for i = 1:length(avg_theta)
     end
     hold on
     plot(linspace(-0.45/2, 0.45/2, 16), zeros(1, 16),  'LineStyle', 'none', 'Marker', 'o', 'Color', 'b', ...
-        'MarkerFaceColor', 'b', 'MarkerSize', 8)
+    'MarkerFaceColor', 'w', 'MarkerSize', 12, 'LineWidth', 1.2);
     hold on
+    for ii = 1:16
+        text((ii-1)/15*0.45-0.225, 0, num2str(ii), "HorizontalAlignment","center",...
+            'VerticalAlignment', 'middle', "FontSize", 8, 'Color', 'k')
+    end
     quiver(0, 0, u(i), v(i), 'LineStyle','-', 'Color', 'red', 'LineWidth', 2, 'MaxHeadSize', 0.3)
     hold off
     xlim([-0.25 0.25])
