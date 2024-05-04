@@ -1,7 +1,6 @@
-function [spec, t, f] = my_stft(signal, fs, nch)
+function [spec, t, f] = my_stft(signal, fs, nch, hop_size)
 
     w_len = 256;
-    hop_size = 1;
     nfft = 512;
 
     s_len = length(signal);

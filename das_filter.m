@@ -1,6 +1,6 @@
 function [avg_pseudo_spec] = das_filter(y, fs, nch, theta, c, d)
 
-    [spectrum, t_spec_axis, f_spec_axis] = my_stft(y, fs, nch);
+    [spectrum, t_spec_axis, f_spec_axis] = my_stft(y, fs, nch, 1);
     
     bands = f_spec_axis(3:4:end);
     
