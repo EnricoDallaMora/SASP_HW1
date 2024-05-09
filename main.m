@@ -15,43 +15,43 @@ f_max= c/lambda_min;  % anti-aliasing condition
 [y, fs] = audioread('array_recordings.wav');
 
 %% Signals plot
-% time = 0:1/fs:(length(y)-1)/fs;
-% figure
-% sgtitle('Normalized array signals')
-% for ii = 1:16
-%     subplot(4, 4, ii)
-%     plot(time, y(:, ii)./max(maxk(y, 1, 2)))
-%     yticks([-1 -0.5 0 0.5 1])
-%     ylim([-1.1 1.1])
-%     xlabel('time [s]')
-%     xticks([2 6 10 14])
-%     title(['Microphone ' num2str(ii)])
-%     grid on
-% end
+time = 0:1/fs:(length(y)-1)/fs;
+figure
+sgtitle('Normalized array signals')
+for ii = 1:16
+    subplot(4, 4, ii)
+    plot(time, y(:, ii)./max(maxk(y, 1, 2)))
+    yticks([-1 -0.5 0 0.5 1])
+    ylim([-1.1 1.1])
+    xlabel('time [s]')
+    xticks([2 6 10 14])
+    title(['Microphone ' num2str(ii)])
+    grid on
+end
 
 %% Spectrograms plot
-% [spectrum, t_spec_axis, f_spec_axis] = my_stft(y.', fs, M, 256);
-% 
-% [ff, tt] = meshgrid(t_spec_axis, f_spec_axis);
-% 
-% figure
-% for ii=1:M
-%     subplot(4, 4, ii)
-%     surf(ff, tt, abs(spectrum(:, :, ii)), 'EdgeAlpha', 0)
-%     view(2)
-%     title(['Microphone ', num2str(ii)])
-%     colorbar
-%     xticks([2 6 10 14])
-%     xlim([0 14.7])
-%     xlabel('time [s]')
-%     ylabel('frequency [Hz]')
-% end
-% sgtitle('Spectrograms of the signals')
+[spectrum, t_spec_axis, f_spec_axis] = my_stft(y.', fs, M, 256);
+
+[ff, tt] = meshgrid(t_spec_axis, f_spec_axis);
+
+figure
+for ii=1:M
+    subplot(4, 4, ii)
+    surf(ff, tt, abs(spectrum(:, :, ii)), 'EdgeAlpha', 0)
+    view(2)
+    title(['Microphone ', num2str(ii)])
+    colorbar
+    xticks([2 6 10 14])
+    xlim([0 14.7])
+    xlabel('time [s]')
+    ylabel('frequency [Hz]')
+end
+sgtitle('Spectrograms of the signals')
 
 %% PROCESSING
 K = 1024;
 big_win = hann(K).';
-big_hop = floor(K*0.75);
+big_hop = 512;
 N_frames = floor((length(y)-K)/big_hop);
 
 theta = -90:1:90;
