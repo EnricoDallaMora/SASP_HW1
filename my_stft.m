@@ -1,7 +1,7 @@
 function [spec, t, f] = my_stft(signal, fs, nch, hop_size)
 
     w_len = 256;
-    nfft = 512;
+    nfft = 256;
 
     s_len = length(signal);
     n_frames = floor((s_len-w_len)/hop_size);
